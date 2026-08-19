@@ -1,0 +1,163 @@
+[
+  {
+    "query": "procurement kit",
+    "expected_documents": ["Procurement Kit Process Document.docx"],
+    "expected_sections": ["Procurement Kit Creation Steps:"]
+  },
+  {
+    "query": "how do I create a procurement kit?",
+    "expected_documents": ["Procurement Kit Process Document.docx"],
+    "expected_sections": ["Procurement Kit Creation Steps:"]
+  },
+  {
+    "query": "procurement kit closure",
+    "expected_documents": ["Procurement Kit Process Document.docx"],
+    "expected_sections": ["Procurement Kit Closure:"]
+  },
+  {
+    "query": "close a kit using PO and inventory reports",
+    "expected_documents": ["Procurement Kit Process Document.docx"],
+    "expected_sections": ["Procurement Kit Closure:"]
+  },
+  {
+    "query": "update hold tag on a kit",
+    "expected_documents": ["Procurement Kit Process Document.docx"],
+    "expected_sections": ["Revision of Kit for Updating hold tag:"]
+  },
+  {
+    "query": "procurement kit tracking report",
+    "expected_documents": ["Procurement Kit Process Document.docx"],
+    "expected_sections": ["6. Procurement Kit Task Report:"]
+  },
+  {
+    "query": "additional quantity tracking",
+    "expected_documents": ["Procurement Kit Process Document.docx"],
+    "expected_sections": ["Additional Quantity Tracking Process:"]
+  },
+  {
+    "query": "new part development after kit release",
+    "expected_documents": ["Procurement Kit Process Document.docx"],
+    "expected_sections": ["New Part Development Process:"]
+  },
+  {
+    "query": "part creation",
+    "expected_documents": ["Part Creation & EBOM Process.docx"],
+    "expected_sections": ["Procedure for Part Creation"]
+  },
+  {
+    "query": "how do I create a new part?",
+    "expected_documents": ["Part Creation & EBOM Process.docx"],
+    "expected_sections": ["Procedure for Part Creation"]
+  },
+  {
+    "query": "proto part",
+    "expected_documents": ["Part Creation & EBOM Process.docx"],
+    "expected_sections": ["Procedure for creation of Proto Part"]
+  },
+  {
+    "query": "part number five segments",
+    "expected_documents": ["Part Creation & EBOM Process.docx"],
+    "expected_sections": ["Significance of 5 Segments"]
+  },
+  {
+    "query": "add BOM structure",
+    "expected_documents": ["Part Creation & EBOM Process.docx"],
+    "expected_sections": ["Adding BOM Structure"]
+  },
+  {
+    "query": "upload final drawing",
+    "expected_documents": ["Part Creation & EBOM Process.docx"],
+    "expected_sections": ["Various Tabs"]
+  },
+  {
+    "query": "EBOM",
+    "expected_documents": ["Part Creation & EBOM Process.docx"]
+  },
+  {
+    "query": "company standard document problem report",
+    "expected_documents": ["User Guide_Company standard document Change Management Process Document.docx"],
+    "expected_sections": ["Problem Report Creation:"]
+  },
+  {
+    "query": "create a change request for a company standard document",
+    "expected_documents": ["User Guide_Company standard document Change Management Process Document.docx"],
+    "expected_sections": ["Change Request Creation:"]
+  },
+  {
+    "query": "company standard document change notice",
+    "expected_documents": ["User Guide_Company standard document Change Management Process Document.docx"],
+    "expected_sections": ["Change Notice Creation:"]
+  },
+  {
+    "query": "track PR ECR ECN on changes tab",
+    "expected_documents": ["User Guide_Company standard document Change Management Process Document.docx"],
+    "expected_sections": ["5. Result:"]
+  },
+  {
+    "query": "problem report proto BOM",
+    "expected_documents": ["Change Management Process_.docx"],
+    "expected_sections": ["Problem Report Proto BOM Creation"]
+  },
+  {
+    "query": "ECR proto BOM",
+    "expected_documents": ["Change Management Process_.docx"],
+    "expected_sections": ["Engineering Change Request Proto BOM Creation"]
+  },
+  {
+    "query": "engineering change notice implementation plan",
+    "expected_documents": ["Change Management Process_.docx"],
+    "expected_sections": ["Engineering Change Notice Proto Creation"]
+  },
+  {
+    "query": "how do I modify a part drawing?",
+    "expected_documents": ["Change Management Process_.docx"]
+  },
+  {
+    "query": "create a CRE work request",
+    "expected_documents": ["Work Request CRE Process Document - KOEL.docx"],
+    "expected_sections": ["New Work Request Document Creation Steps:"]
+  },
+  {
+    "query": "assign CRE work request to proto assembly",
+    "expected_documents": ["Work Request CRE Process Document - KOEL.docx"],
+    "expected_sections": ["Work Request Process:"]
+  },
+  {
+    "query": "close CRE work order",
+    "expected_documents": ["Work Request CRE Process Document - KOEL.docx"],
+    "expected_sections": ["Work Request Process:"]
+  },
+  {
+    "query": "CRE assembly report approval",
+    "expected_documents": [
+      "Work Request CRE Process Document - KOEL.docx",
+      "Work Request CRE Combustion Process Document_v2.docx"
+    ],
+    "expected_sections": ["CRE Assembly Report Creation & Approval:"]
+  },
+  {
+    "query": "create a combustion work request",
+    "expected_documents": ["Work Request CRE Combustion Process Document_v2.docx"],
+    "expected_sections": ["New Work Request Document Creation Steps:"]
+  },
+  {
+    "query": "put a combustion work request on hold",
+    "expected_documents": ["Work Request CRE Combustion Process Document_v2.docx"],
+    "expected_sections": ["Process Hold (By Assembly Dept.):"]
+  },
+  {
+    "query": "emission test report approval",
+    "expected_documents": ["Work Request CRE Combustion Process Document_v2.docx"],
+    "expected_sections": ["Emission Test Report Creation and Approval Process:"]
+  },
+  {
+    "query": "create an NVH work request",
+    "expected_documents": ["Work Request NVH Process Document.docx"],
+    "expected_sections": ["New Work Request Document Creation Steps:"]
+  },
+  {
+    "query": "NVH test report approval",
+    "expected_documents": ["Work Request NVH Process Document.docx"],
+    "expected_sections": ["NVH Test Report Creation & Approval:"]
+  }
+]

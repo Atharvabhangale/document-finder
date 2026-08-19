@@ -1,0 +1,20 @@
+[
+  {"query": "problem report production BOM", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "create a new problem report", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "set affected end items on a problem report", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "channelize problem report to CRE engineer", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "problem report feasibility review", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "create ECR against a problem report", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "change request production BOM", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "CRB department review", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "CPD review impact analysis", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "final approval for change request", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "select sales vertical inhouse outsourced", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "provide implementation date for change request", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "create change notice against change request", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "change notice production BOM", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "complete change notice task", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "release modification sheet promotion request", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "audit change notice QA", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []},
+  {"query": "audit production BOM implementation date", "expected_documents": ["PR-ECR-ECN-ACN Process.docx"], "expected_sections": []}
+]
