@@ -1,0 +1,6 @@
+{
+  "model_name": "Qwen/Qwen3-Embedding-0.6B",
+  "configuration_hash": "1047d1f26e37e35ab9b4ff4ac92d5c253c16a4b72c428a77e6bad69e9907c1ef",
+  "dimension": 1024,
+  "chunk_count": 441
+}
