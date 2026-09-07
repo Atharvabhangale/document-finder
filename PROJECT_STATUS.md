@@ -229,6 +229,57 @@ prerequisite for treating them as real results. See
 The demo taxonomy (10 categories, 2 domains) describes this 36-document corpus
 only. It is not a proposed taxonomy for the eventual Windchill repository.
 
+### Phase 14 — Corpus loading and refresh
+
+Validated the customer-demo workflow: a customer supplies a folder of documents,
+one command indexes it, and the corpus is immediately searchable.
+
+**This is filesystem-based corpus loading, not Windchill synchronization.**
+Windchill integration remains paused and untouched; exported documents are
+treated as ordinary files on disk.
+
+Added `python -m document_finder.corpus <FOLDER>`, which orchestrates existing
+components only:
+
+    discover -> ingest (hash-skip unchanged) -> prune removed -> embed missing -> build FAISS -> verify
+
+Ingestion, chunking, OCR, the embedding model, FAISS, retrieval, ranking, the
+API, and the frontend are all unchanged, as are every evaluation dataset and the
+isolated Phase 13 experiment.
+
+Two real defects were found and fixed:
+
+- **Deleted documents were never removed.** A document deleted from the folder
+  stayed in SQLite and kept appearing in search results. It is now pruned, only
+  when it is absent from both the scan and the disk, with guards that refuse an
+  empty-scan or greater-than-half prune unless explicitly confirmed.
+- **No consistency check existed.** Searchable chunks, persisted embeddings, and
+  FAISS vector IDs are now compared as sets after every run.
+
+Two pre-existing caveats are documented rather than silently changed:
+
+- **Duplicate filenames**: internal identity is safe (`sha256(source_path)`, and
+  `source_path` is unique), but search aggregates by filename and
+  `GET /documents/{filename}` returns 404 rather than guessing between two
+  same-named documents. Windchill exports commonly repeat filenames, so this is
+  the most likely demo surprise. Fixing it needs an API/frontend change.
+- **OCR failures are sticky**: `is_unchanged` treats a failed OCR status as
+  settled, so such a document is skipped forever. Default behaviour is
+  unchanged; `--retry-failed-ocr` clears the stored hash to force a retry.
+
+Real-corpus validation on a throwaway copy (production `data/` untouched):
+repeat refresh skipped 36/36 with zero re-embedding in 0.36s, verifying
+**441 chunks = 441 embeddings = 441 FAISS vectors**; deleting one document
+pruned it cleanly to **414 = 414 = 414**. First-run embedding cost was NOT
+measured — `torch`/`transformers` are not installed in that environment.
+
+**The served application still assumes a fixed corpus path.** `api/routes.py`
+hardcodes `data/` with no override, so the demo corpus must live at `data/`
+even though the indexing command accepts any folder.
+
+No production-scale performance claim is made. See `docs/corpus-refresh.md` for
+measured behaviour, timings, caveats, and the scale analysis.
+
 ## Current Next Task
 
 Finish and verify Phase 10.

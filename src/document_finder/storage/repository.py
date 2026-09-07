@@ -239,3 +239,73 @@ class SQLiteRepository:
                LEFT JOIN chunks c ON c.document_id = d.document_id
                GROUP BY d.document_id ORDER BY d.filename COLLATE NOCASE"""
         ).fetchall()
+
+    def indexed_sources(self) -> list[str]:
+        """Relative source paths currently held in the index, in stable order."""
+        return [
+            row["source_path"]
+            for row in self.connection.execute(
+                "SELECT source_path FROM documents ORDER BY source_path"
+            )
+        ]
+
+    def sources_with_failed_ocr(self) -> list[str]:
+        """Documents stored after an OCR failure.
+
+        `is_unchanged` treats any non-pending OCR status as settled, so these are
+        skipped on every later run and never retried — even once OCR
+        dependencies become available. Callers can hand these to
+        `mark_for_reprocessing`.
+        """
+        return [
+            row["source_path"]
+            for row in self.connection.execute(
+                "SELECT source_path FROM documents WHERE ocr_status = 'failed' ORDER BY source_path"
+            )
+        ]
+
+    def mark_for_reprocessing(self, source_paths: list[str]) -> int:
+        """Clear the stored content hash so the next run re-parses these documents.
+
+        The rows are kept, so nothing becomes unsearchable in the meantime; the
+        hash comparison in `is_unchanged` simply stops matching.
+        """
+        if not source_paths:
+            return 0
+        with self.connection:
+            cursor = self.connection.executemany(
+                "UPDATE documents SET content_sha256 = '' WHERE source_path = ?",
+                [(source_path,) for source_path in source_paths],
+            )
+        return cursor.rowcount if cursor.rowcount and cursor.rowcount > 0 else len(source_paths)
+
+    def delete_documents(self, source_paths: list[str]) -> int:
+        """Remove documents that are no longer part of the supplied corpus.
+
+        Sections, chunks, FTS rows, and persisted embeddings are removed by the
+        schema's cascade rules, so a pruned document stops being searchable. Each
+        removal is recorded in `ingest_runs` with outcome 'pruned' for audit.
+        """
+        if not source_paths:
+            return 0
+        now = _now()
+        removed = 0
+        with self.connection:
+            for source_path in source_paths:
+                row = self.connection.execute(
+                    "SELECT document_id, content_sha256 FROM documents WHERE source_path = ?",
+                    (source_path,),
+                ).fetchone()
+                if row is None:
+                    continue
+                self.connection.execute(
+                    "DELETE FROM documents WHERE document_id = ?", (row["document_id"],)
+                )
+                self.connection.execute(
+                    """INSERT INTO ingest_runs(
+                        source_path, content_sha256, started_at, finished_at, outcome, warnings_json
+                    ) VALUES (?, ?, ?, ?, 'pruned', '[]')""",
+                    (source_path, row["content_sha256"], now, now),
+                )
+                removed += 1
+        return removed
