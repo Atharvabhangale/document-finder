@@ -1,0 +1,602 @@
+[
+  {
+    "query": "ECR",
+    "case_type": "ambiguous_short",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Change Management"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "Bare acronym. 5 change-management documents describe ECR at different document types (SOP, process, user guide); no intent signal."
+  },
+  {
+    "query": "ECN",
+    "case_type": "ambiguous_short",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Change Management"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "Same as ECR; multiple change-management candidates."
+  },
+  {
+    "query": "BOM",
+    "case_type": "cross_domain_collision",
+    "expected_domain": "cross_domain",
+    "expected_intent": "unknown",
+    "expected_categories": ["BOM / EBOM", "IT Deployment"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "Real collision: 4 PLM BOM documents, plus the Bajaj chatbot deployment doc's 'Multi-Level BOM Extraction Deployment' section. Domain clarification genuinely reduces the corpus."
+  },
+  {
+    "query": "change management",
+    "case_type": "ambiguous_short",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Change Management"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "One category, 5 candidate documents differing by document type."
+  },
+  {
+    "query": "work request",
+    "case_type": "ambiguous_short",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Work Request"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "3 candidates: CRE (KOEL), CRE Combustion, NVH. Clarifying which discipline reduces 3 to 1."
+  },
+  {
+    "query": "part",
+    "case_type": "ambiguous_short",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Part / WTPart / CAD"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "Very broad PLM term; overlaps BOM/EBOM through Part Creation & EBOM Process."
+  },
+  {
+    "query": "NPD",
+    "case_type": "ambiguous_short",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["NPD / Project"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "9 candidates including 7 MS gate documents; clarifying the gate reduces sharply."
+  },
+  {
+    "query": "deployment",
+    "case_type": "ambiguous_short",
+    "expected_domain": "it",
+    "expected_intent": "unknown",
+    "expected_categories": ["IT Deployment"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "4 IT deployment documents (backend + chatbot v1/v2/v3)."
+  },
+  {
+    "query": "SOP",
+    "case_type": "cross_domain_collision",
+    "expected_domain": "cross_domain",
+    "expected_intent": "unknown",
+    "expected_categories": ["Change Management", "BOM / EBOM", "Part / WTPart / CAD", "NPD / Project", "Windchill Navigation & Admin", "IT Infrastructure & Operations"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "Document-type word, not a topic. Appears in filenames across both domains (BEL_SOP_*, Iraje_PAM_SOP, AWS Daily Report SOP, User Separation SOP)."
+  },
+  {
+    "query": "user guide",
+    "case_type": "ambiguous_short",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Change Management", "NPD / Project", "Windchill Navigation & Admin"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "Document-type word spanning several PLM categories (change-management user guide, NPD/project user manuals, SolidWorks user manual)."
+  },
+  {
+    "query": "Windchill",
+    "case_type": "ambiguous_short",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Change Management", "BOM / EBOM", "Part / WTPart / CAD", "NPD / Project", "Windchill Navigation & Admin", "Product Reference"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "System name, matches nearly the whole PLM slice; least informative possible query."
+  },
+  {
+    "query": "CRE",
+    "case_type": "ambiguous_short",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Work Request"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "2 candidates (CRE KOEL, CRE Combustion); clarification halves the space."
+  },
+  {
+    "query": "folder navigation",
+    "case_type": "ambiguous_short",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Windchill Navigation & Admin"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "2 candidates (CP, Illum) distinguished only by product line."
+  },
+  {
+    "query": "WTPart",
+    "case_type": "ambiguous_short",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Part / WTPart / CAD"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "3 candidates: WTPart creation/CAD association, promotion request, imported parts."
+  },
+  {
+    "query": "gate",
+    "case_type": "ambiguous_short",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["NPD / Project"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "7 MS gate documents; clarifying which gate reduces 7 to 1."
+  },
+  {
+    "query": "chatbot",
+    "case_type": "ambiguous_short",
+    "expected_domain": "it",
+    "expected_intent": "unknown",
+    "expected_categories": ["IT Deployment"],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": true,
+    "notes": "3 versioned deployment documents; clarifying the version reduces 3 to 1."
+  },
+  {
+    "query": "MS3",
+    "case_type": "short_but_specific",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["NPD / Project"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "CRITICAL NEGATIVE CASE: 4 characters, but resolves to exactly one document (MS3 gate). Shortness must not trigger clarification."
+  },
+  {
+    "query": "NVH",
+    "case_type": "short_but_specific",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Work Request"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Bare acronym but exactly one NVH document exists. No clarification needed."
+  },
+  {
+    "query": "combustion",
+    "case_type": "short_but_specific",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Work Request"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Single candidate document."
+  },
+  {
+    "query": "procurement",
+    "case_type": "short_but_specific",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Procurement"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Bare topic term, but the corpus holds exactly one procurement document. Clarifying would waste a turn."
+  },
+  {
+    "query": "solidworks",
+    "case_type": "short_but_specific",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Windchill Navigation & Admin"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Single candidate (SolidWorks-Windchill user manual)."
+  },
+  {
+    "query": "Iraje PAM",
+    "case_type": "short_but_specific",
+    "expected_domain": "it",
+    "expected_intent": "unknown",
+    "expected_categories": ["IT Infrastructure & Operations"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Single candidate; short query, unambiguous."
+  },
+  {
+    "query": "battlecard",
+    "case_type": "short_but_specific",
+    "expected_domain": "plm",
+    "expected_intent": "unknown",
+    "expected_categories": ["Product Reference"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Single candidate (Windchill+ Battlecard)."
+  },
+  {
+    "query": "how do I create an ECR?",
+    "case_type": "procedural",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["Change Management"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Same topic as the bare 'ECR' case but with clear procedural intent; must NOT clarify."
+  },
+  {
+    "query": "how to create a new part in Windchill",
+    "case_type": "procedural",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["Part / WTPart / CAD"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Clear procedural phrasing plus specific topic."
+  },
+  {
+    "query": "steps to create a procurement kit",
+    "case_type": "procedural",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["Procurement"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "'steps to' is a procedural marker."
+  },
+  {
+    "query": "how do I create a BOM using an excel template?",
+    "case_type": "procedural",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["BOM / EBOM"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "'excel template' disambiguates BOM to one document and resolves the cross-domain collision toward PLM."
+  },
+  {
+    "query": "how to raise an NVH work request",
+    "case_type": "procedural",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["Work Request"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Discipline named, so the 3-way work-request ambiguity is already resolved."
+  },
+  {
+    "query": "how do I deploy the Bajaj chatbot?",
+    "case_type": "procedural",
+    "expected_domain": "it",
+    "expected_intent": "procedural",
+    "expected_categories": ["IT Deployment"],
+    "expected_ambiguity": "medium",
+    "expected_needs_clarification": false,
+    "notes": "Procedural and clearly IT-domain, but 3 versions exist. Intent is clear enough to search; version selection is better handled by ranking than by a clarification prompt."
+  },
+  {
+    "query": "how to associate CAD with a WTPart",
+    "case_type": "procedural",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["Part / WTPart / CAD"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Maps to WTPart Creation and Association with CAD."
+  },
+  {
+    "query": "how do I copy BOM structure from concept FG code to final FG code",
+    "case_type": "procedural",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["BOM / EBOM"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Near-exact title match; unambiguous despite containing 'BOM'."
+  },
+  {
+    "query": "procedure to delete a change task",
+    "case_type": "procedural",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["Change Management"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Maps to Change Task Deletion & Undo Reservation Activity Process."
+  },
+  {
+    "query": "how to add material and mass to imported parts",
+    "case_type": "procedural",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["Part / WTPart / CAD"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Maps to Imported Parts Material Addition and Mass Calculation."
+  },
+  {
+    "query": "how do I navigate folders for Illum?",
+    "case_type": "procedural",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["Windchill Navigation & Admin"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "'Illum' resolves the CP-vs-Illum ambiguity."
+  },
+  {
+    "query": "steps for promotion request to release a WTPart",
+    "case_type": "procedural",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["Part / WTPart / CAD"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Maps to Promotion Request to Released WTPart and CAD Parts."
+  },
+  {
+    "query": "how to create an NPD request",
+    "case_type": "procedural",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["NPD / Project"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Maps to NPD Request Creation User Manual, not to the MS gate documents."
+  },
+  {
+    "query": "how do I update the host file for Iraje PAM",
+    "case_type": "procedural",
+    "expected_domain": "it",
+    "expected_intent": "procedural",
+    "expected_categories": ["IT Infrastructure & Operations"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Matches the 'Step 1: Update Host File' section of Iraje_PAM_SOP."
+  },
+  {
+    "query": "how do I create a change request and a change notice?",
+    "case_type": "procedural",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["Change Management"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Two related steps in one query; still one category and clear intent."
+  },
+  {
+    "query": "where do I find the process for adding additional quantity tracking",
+    "case_type": "procedural",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["Procurement"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Matches the 'Additional Quantity Tracking Process' section of the procurement kit document."
+  },
+  {
+    "query": "I need the process for changing a released drawing",
+    "case_type": "natural_language",
+    "expected_domain": "plm",
+    "expected_intent": "procedural",
+    "expected_categories": ["Change Management"],
+    "expected_ambiguity": "medium",
+    "expected_needs_clarification": false,
+    "notes": "Informal phrasing with no explicit ECR/ECN vocabulary; intent is clear so it should search rather than clarify."
+  },
+  {
+    "query": "solidworks windchill user manual",
+    "case_type": "reference",
+    "expected_domain": "plm",
+    "expected_intent": "reference",
+    "expected_categories": ["Windchill Navigation & Admin"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Names a specific document; 'user manual' is a document-type word but the topic pins one file."
+  },
+  {
+    "query": "PR ECR ECN ACN process document",
+    "case_type": "reference",
+    "expected_domain": "plm",
+    "expected_intent": "reference",
+    "expected_categories": ["Change Management"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Near-exact filename match (PR-ECR-ECN-ACN Process.docx, an OCR-recovered document)."
+  },
+  {
+    "query": "procurement kit process document",
+    "case_type": "reference",
+    "expected_domain": "plm",
+    "expected_intent": "reference",
+    "expected_categories": ["Procurement"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Exact filename match."
+  },
+  {
+    "query": "NPD MS2 gate document",
+    "case_type": "reference",
+    "expected_domain": "plm",
+    "expected_intent": "reference",
+    "expected_categories": ["NPD / Project"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Gate number pins one of the 7 gate documents."
+  },
+  {
+    "query": "windchill battlecard",
+    "case_type": "reference",
+    "expected_domain": "plm",
+    "expected_intent": "reference",
+    "expected_categories": ["Product Reference"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Exact match to a vendor reference document, not a process document."
+  },
+  {
+    "query": "AWS daily report SOP",
+    "case_type": "reference",
+    "expected_domain": "it",
+    "expected_intent": "reference",
+    "expected_categories": ["IT Infrastructure & Operations"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Contains the ambiguous word 'SOP' but the rest of the query pins one IT document."
+  },
+  {
+    "query": "user separation SOP for windchill",
+    "case_type": "reference",
+    "expected_domain": "plm",
+    "expected_intent": "reference",
+    "expected_categories": ["Windchill Navigation & Admin"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Exact filename match despite containing both 'SOP' and 'windchill'."
+  },
+  {
+    "query": "excel template BOM",
+    "case_type": "reference",
+    "expected_domain": "plm",
+    "expected_intent": "reference",
+    "expected_categories": ["BOM / EBOM"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "'excel template' resolves both the BOM cross-domain collision and the within-category ambiguity."
+  },
+  {
+    "query": "what is the difference between a proto BOM and a production BOM?",
+    "case_type": "informational",
+    "expected_domain": "plm",
+    "expected_intent": "informational",
+    "expected_categories": ["BOM / EBOM", "Change Management"],
+    "expected_ambiguity": "medium",
+    "expected_needs_clarification": false,
+    "notes": "Genuine category overlap: proto/production BOM sections live inside Change Management Process_.docx. Asks for a fact, not steps."
+  },
+  {
+    "query": "who approves a CRE test report?",
+    "case_type": "informational",
+    "expected_domain": "plm",
+    "expected_intent": "informational",
+    "expected_categories": ["Work Request"],
+    "expected_ambiguity": "medium",
+    "expected_needs_clarification": false,
+    "notes": "Approval question; 2 CRE documents both contain test-report approval sections."
+  },
+  {
+    "query": "what are the 5 segments of a part number?",
+    "case_type": "informational",
+    "expected_domain": "plm",
+    "expected_intent": "informational",
+    "expected_categories": ["Part / WTPart / CAD"],
+    "expected_ambiguity": "low",
+    "expected_needs_clarification": false,
+    "notes": "Matches the 'Significance of 5 Segments' section of Part Creation & EBOM Process."
+  },
+  {
+    "query": "what is a change task",
+    "case_type": "informational",
+    "expected_domain": "plm",
+    "expected_intent": "informational",
+    "expected_categories": ["Change Management"],
+    "expected_ambiguity": "medium",
+    "expected_needs_clarification": false,
+    "notes": "Definitional question with a clear category."
+  },
+  {
+    "query": "multi-level BOM extraction",
+    "case_type": "cross_domain_collision",
+    "expected_domain": "it",
+    "expected_intent": "reference",
+    "expected_categories": ["IT Deployment"],
+    "expected_ambiguity": "medium",
+    "expected_needs_clarification": false,
+    "notes": "Distinctive phrase from the chatbot deployment document. Contains 'BOM' but belongs to IT. Tests that the domain router is not fooled by a PLM-looking token."
+  },
+  {
+    "query": "java utility deployment for the chatbot",
+    "case_type": "cross_domain_collision",
+    "expected_domain": "it",
+    "expected_intent": "procedural",
+    "expected_categories": ["IT Deployment"],
+    "expected_ambiguity": "medium",
+    "expected_needs_clarification": false,
+    "notes": "Matches the 'Java Utility Deployment' sections shared by chatbot v1/v2; clearly IT."
+  },
+  {
+    "query": "how do I file a travel expense claim?",
+    "case_type": "out_of_corpus",
+    "expected_domain": "none",
+    "expected_intent": "procedural",
+    "expected_categories": [],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": false,
+    "notes": "Well-formed procedural query with no corpus match. Correct behaviour is an honest no-match, NOT a clarification menu."
+  },
+  {
+    "query": "employee onboarding policy",
+    "case_type": "out_of_corpus",
+    "expected_domain": "none",
+    "expected_intent": "unknown",
+    "expected_categories": [],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": false,
+    "notes": "No HR documents in this corpus; clarification cannot rescue it."
+  },
+  {
+    "query": "what is the weather today",
+    "case_type": "out_of_corpus",
+    "expected_domain": "none",
+    "expected_intent": "informational",
+    "expected_categories": [],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": false,
+    "notes": "Entirely off-domain input."
+  },
+  {
+    "query": "",
+    "case_type": "invalid",
+    "expected_domain": "none",
+    "expected_intent": "unknown",
+    "expected_categories": [],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": false,
+    "notes": "Empty string must be handled without raising and must not produce a clarification prompt."
+  },
+  {
+    "query": "   ",
+    "case_type": "invalid",
+    "expected_domain": "none",
+    "expected_intent": "unknown",
+    "expected_categories": [],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": false,
+    "notes": "Whitespace-only input."
+  },
+  {
+    "query": "???",
+    "case_type": "invalid",
+    "expected_domain": "none",
+    "expected_intent": "unknown",
+    "expected_categories": [],
+    "expected_ambiguity": "high",
+    "expected_needs_clarification": false,
+    "notes": "Punctuation-only input yields no usable terms."
+  }
+]
