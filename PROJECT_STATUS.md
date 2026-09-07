@@ -108,12 +108,27 @@ production-scale performance claims.
 
 ## Current Corpus
 
-Current prototype corpus:
+Current prototype corpus, as measured from `data/document_finder.sqlite3`:
 
-- 8 documents
-- 121 searchable chunks after OCR expansion
+- 36 documents (22 PDF, 14 DOCX)
+- 125 sections
+- 441 searchable chunks, 441 persisted embeddings
+- 58 OCR-derived chunks
 
-One DOCX document was image-based and required OCR.
+One DOCX document (`PR-ECR-ECN-ACN Process.docx`) is image-based, has zero
+native text, and required OCR; its OCR status is `completed`.
+
+The corpus is deliberately heterogeneous. Alongside the manufacturing/PLM
+process documentation it contains unrelated internal IT material (backend and
+Bajaj chatbot deployment documents, Iraje PAM, AWS daily report SOP) and one
+vendor reference (Windchill+ battlecard). This mix is representative of what a
+real Windchill repository will contain and is treated as a problem to solve, not
+as noise to exclude.
+
+Note: the 8-document / 121-chunk figures in earlier revisions of this file and in
+`docs/retrieval-evaluation.md` predate the corpus expansion. The retrieval metric
+values recorded below were measured on the earlier, smaller corpus and have not
+been re-measured against the current 36-document corpus.
 
 ## Important Design Decisions
 
@@ -175,6 +190,44 @@ Static frontend and safe document-opening endpoint.
 ### Phase 10
 PDF ingestion and scanned-PDF OCR support.
 Current work must be inspected and verified before considering Phase 10 complete.
+
+### Phase 13 — EXPERIMENT ONLY (not production)
+
+Query-understanding experiment over the 36-document corpus. Investigated whether
+an ambiguous or underspecified query can be recognised and answered with a useful
+clarification question instead of an immediate long result list.
+
+**This is an experiment, not a production integration.** It is deliberately NOT
+connected to retrieval:
+
+- retrieval, ranking, ingestion, OCR, chunking, the API, and the frontend are unchanged
+- the existing evaluation datasets are unchanged
+- `document_finder.experiments.query_understanding` is imported by nothing in
+  `api/`, `search/`, or `ingestion/`; a test asserts this
+- the experiment reads the SQLite index read-only and never touches FAISS or the
+  embedding model
+
+Approach: deterministic and corpus-derived. **No generative LLM and no embedding
+model were required**, and no model was downloaded. Intent comes from ordered
+surface markers; ambiguity is computed from how many corpus candidates a query
+admits, which is what lets a 4-character query like `MS3` be treated as
+unambiguous while `SOP` is not.
+
+Measured on 60 self-authored labelled queries (`evaluation/query_understanding/`):
+domain 0.967, intent 0.900, ambiguity 0.833, clarification-needed 0.867,
+primary-category 0.983. All 12 generated clarifications provably narrow the
+candidate set, but worst-case reduction averages only 33% and is as low as 12.5%
+for skewed facets.
+
+**The labels were authored by the same agent that wrote the classifier** (the
+dataset named in the phase brief did not exist in the repository). They were
+frozen in git before the implementation was written, but these figures remain a
+consistency check, not independent validation. Expert re-labelling is a
+prerequisite for treating them as real results. See
+`evaluation/query_understanding/LABELS.md` and `REPORT.md`.
+
+The demo taxonomy (10 categories, 2 domains) describes this 36-document corpus
+only. It is not a proposed taxonomy for the eventual Windchill repository.
 
 ## Current Next Task
 
