@@ -113,14 +113,32 @@ def test_strong_discriminator_asks_a_question(corpus: Path) -> None:
     assert prepared.reduction >= config.min_clarification_reduction()
 
 
-def test_weak_discriminator_does_not_ask_a_pointless_question(corpus: Path) -> None:
-    """A facet that barely narrows anything must not cost the user a round trip."""
-    prepared = understanding.prepare("sop")
+def test_weak_discriminator_does_not_ask_a_pointless_question(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A facet that barely narrows anything must not cost the user a round trip.
+
+    The corpus here offers exactly one viable facet and it is deliberately weak:
+    six documents sharing a domain and a document type, split 5/1 by category.
+    That is a real choice the analyzer will offer, and a 17% worst-case reduction
+    the integration layer must still decline.
+    """
+    from document_finder.experiments.query_understanding import CorpusProfile, DocumentProfile
+
+    monkeypatch.delenv(config.QUERY_UNDERSTANDING_VARIABLE, raising=False)
+    monkeypatch.delenv(config.MIN_REDUCTION_VARIABLE, raising=False)
+    weak = CorpusProfile.from_profiles([
+        *[DocumentProfile(f"Widget Part Handling {index}.docx", (), "widget part handling", f"w{index}")
+          for index in range(5)],
+        DocumentProfile("Widget Procurement Kit.docx", (), "widget procurement kit", "w9"),
+    ])
+    monkeypatch.setattr(understanding, "corpus_profile", lambda *a, **k: weak)
+
+    prepared = understanding.prepare("widget")
+
+    assert prepared.facet == "category", "the weak category facet is the only one available"
+    assert prepared.candidates_before == 6 and prepared.largest_option_candidates == 5
+    assert prepared.reduction < config.min_clarification_reduction()
     assert prepared.needs_clarification is False
     assert prepared.reason == "reduction_too_small"
-    # The analyzer was willing to offer a question; the integration layer declined it.
-    assert prepared.candidates_before > prepared.largest_option_candidates
-    assert prepared.reduction < config.min_clarification_reduction()
 
 
 def test_out_of_corpus_query_does_not_ask_a_question(corpus: Path) -> None:

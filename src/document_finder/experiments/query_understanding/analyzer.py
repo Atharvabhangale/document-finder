@@ -69,6 +69,12 @@ MIN_CANDIDATES_FOR_CLARIFICATION = 3
 # body text everywhere.
 CONTENDER_SCORE_RATIO = 0.5
 
+# A facet's options should represent most of what the user is choosing between.
+# Facets reaching less than this share of the candidates are ranked behind
+# better-covering ones, because their apparent narrowing comes from omitting
+# candidates rather than from separating them.
+MIN_OPTION_COVERAGE = 0.5
+
 # When a query contains at least one real topic term, terms naming the host
 # system or a document kind are down-weighted: "Windchill" in
 # "how to create a new part in Windchill" should not outrank "part".
@@ -113,6 +119,13 @@ class Clarification:
     # user's choice without re-deriving the facet. Reporting only; no decision
     # in this module reads it.
     option_documents: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    # Share of the candidate set reachable through the offered options. A facet
+    # whose dominant bucket was dropped for covering everything can post an
+    # excellent reduction while representing almost none of the candidates:
+    # "sop" splits 16 documents into two 3-document type options and leaves the
+    # other 10 reachable only by searching everything. Low coverage means the
+    # question misrepresents the corpus, however sharply it appears to narrow.
+    option_coverage: float = 0.0
 
     @property
     def reduces_search_space(self) -> bool:
@@ -236,8 +249,12 @@ def _finalize(
         option: tuple(candidate.document_id for candidate in selected if candidate.document_id)
         for option, selected in narrowing.items()
     }
+    # Coverage is measured over candidates, not document identities, so it is
+    # correct for profiles built without identities too.
+    reachable = {candidate for selected in narrowing.values() for candidate in selected}
+    coverage = len(reachable) / before if before else 0.0
     return Clarification(
-        question, options, facet, {**counts, ESCAPE_OPTION: before}, before, documents
+        question, options, facet, {**counts, ESCAPE_OPTION: before}, before, documents, coverage
     )
 
 
@@ -250,6 +267,14 @@ def _build_clarification(
     if before < MIN_CANDIDATES_FOR_CLARIFICATION:
         return None
 
+    # Semantic facets are collected rather than taken first-come, because the
+    # earliest viable facet is not always the most useful one. "bom" matches six
+    # documents that domain splits 5/1 (a 17% worst-case reduction, not worth
+    # asking about) while document type splits the same six 3/3. Choosing the
+    # facet that partitions best turns that into a question worth asking, and
+    # ties keep the original ladder order so nothing else moves.
+    semantic: list[Clarification] = []
+
     if len(domains) > 1:
         by_domain = {
             DOMAIN_LABELS[domain]: [c for c in candidates if domain in c.domains]
@@ -257,7 +282,7 @@ def _build_clarification(
         }
         clarification = _finalize("Which area are you looking in?", "domain", by_domain, before)
         if clarification is not None:
-            return clarification
+            semantic.append(clarification)
 
     if len(categories) > 1:
         by_category = {
@@ -266,7 +291,7 @@ def _build_clarification(
         }
         clarification = _finalize("What are you looking for?", "category", by_category, before)
         if clarification is not None:
-            return clarification
+            semantic.append(clarification)
 
     by_type: dict[str, list[Candidate]] = {}
     for candidate in candidates:
@@ -274,7 +299,22 @@ def _build_clarification(
             by_type.setdefault(document_type, []).append(candidate)
     clarification = _finalize("What kind of document do you need?", "document_type", by_type, before)
     if clarification is not None:
-        return clarification
+        semantic.append(clarification)
+
+    if semantic:
+        # Rank by: representative first (options must reach a fair share of the
+        # candidates), then the best worst-case split, then ladder order so ties
+        # keep the previous behaviour. Ranking on the split alone would pick
+        # "sop"'s 31%-coverage type facet over its full-coverage category facet
+        # purely because the type facet's dominant bucket had been dropped.
+        # A filename-token facet is never preferred over a semantic one, however
+        # sharply it might split: its options are fragments, not choices.
+        def rank(pair: tuple[int, Clarification]) -> tuple[int, int, int]:
+            position, option = pair
+            representative = 0 if option.option_coverage >= MIN_OPTION_COVERAGE else 1
+            return representative, option.largest_option_candidates, position
+
+        return min(enumerate(semantic), key=rank)[1]
 
     query_terms = set(terms)
     by_token: dict[str, list[Candidate]] = {}

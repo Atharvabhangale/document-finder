@@ -107,8 +107,13 @@ def test_cross_domain_term_is_detected_and_clarified(profile: CorpusProfile) -> 
     assert result.domain == "cross_domain"
     assert result.needs_clarification is True
     assert result.clarification is not None
-    assert result.clarification.facet == "domain"
+    # Which facet best separates these documents is a corpus property and may
+    # change; what matters is that a *semantic* facet is offered and that it
+    # narrows. (The domain facet splits BOM 5/1 here, so a better-partitioning
+    # semantic facet is preferred over it.)
+    assert result.clarification.facet in {"domain", "category", "document_type"}
     assert result.clarification.reduces_search_space is True
+    assert result.clarification.option_coverage >= 0.5
 
 
 def test_domain_router_is_not_fooled_by_a_plm_looking_token(profile: CorpusProfile) -> None:

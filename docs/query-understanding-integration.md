@@ -41,10 +41,22 @@ reduction = 1 - largest_option_candidates / candidates_before
 ask only if reduction >= QUERY_UNDERSTANDING_MIN_REDUCTION
 ```
 
-**Worst case, not average.** This is the point of the threshold. A domain split
-on `SOP` moves 16 candidates to 14 in its worst branch; Phase 13's own report
-called that useless, and it is declined here. `gate` removes 6 of 7 candidates
-whichever gate you pick, and is asked.
+**Worst case, not average.** This is the point of the threshold. `gate` removes
+6 of 7 candidates whichever gate you pick, and is asked; a facet whose least
+helpful answer barely narrows anything is not.
+
+The threshold alone is not enough, because *which* facet is measured matters.
+The analyzer therefore ranks the semantic facets it can build — by coverage
+first, then by worst-case split, with the ladder order breaking ties — instead
+of taking the first one that merely works. Two things follow:
+
+- `bom` matches six documents that domain splits 5/1 (17%, not worth asking) but
+  document type splits 3/3 (50%). Ranking finds the second, so `bom` now asks.
+- `sop` matches sixteen documents whose document-type facet posts an 81%
+  reduction only because its dominant bucket covered all sixteen and was
+  dropped, leaving options that reach just 5 of them. Coverage ranking rejects
+  that in favour of the category facet: full coverage, 75% reduction, six
+  meaningful topic options.
 
 The 0.5 default means *a question must at least halve the work*. It was chosen
 as a round, explainable rule, **not** fitted to the frozen 60-query labels —
@@ -138,10 +150,11 @@ the threshold was not adjusted to change any of these outcomes.
 | `chatbot` | **clarify** | 3 | 1 | 67% |
 | `user guide` | **clarify** | 5 | 2 | 60% |
 | `change management` | **clarify** | 4 | 2 | 50% |
+| `sop` | **clarify** | 16 | 4 | 75% |
+| `bom` | **clarify** | 6 | 3 | 50% |
+| `windchill` | **clarify** | 4 | 2 | 50% |
 | `work request` | direct | 5 | 3 | 40% |
 | `deployment` | direct | 4 | 3 | 25% |
-| `BOM` | direct | 6 | 5 | 17% |
-| `SOP` | direct | 16 | 14 | 12% |
 | `NPD` | direct | 8 | 7 | 12% |
 | `ECR` | direct | — | — | analyzer offered no facet (only 2 documents name ECR) |
 | `how do I create an ECR?` | direct | — | — | procedural intent |
@@ -163,10 +176,11 @@ corpus root.
    two documents name ECR in a filename or heading, which is below the
    analyzer's 3-candidate floor, so no facet is offered at all. Not a threshold
    problem, and not tuned around.
-2. **`BOM` and `SOP` do not clarify.** Both have one dominant branch (5 of 6, 14
-   of 16), so their worst case falls below the bar even though the *other* branch
-   would narrow sharply. A per-option decision, or a facet chosen by expected
-   rather than worst-case reduction, would handle these better.
+2. **`work request` and `NPD` do not clarify.** Every facet available to them has
+   one dominant branch (3 of 5, 7 of 8), so the worst case falls below the bar
+   even though the *other* branches narrow sharply. A per-option decision — offer
+   only the branches that genuinely narrow — would handle these, and is the
+   natural next step.
 3. **At most five options** are offered for a filename-token facet, so `gate`
    shows MS0–MS4 and omits MS5/MS6; those remain reachable only via
    "Search all documents".
