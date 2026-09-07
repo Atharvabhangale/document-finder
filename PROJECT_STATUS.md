@@ -280,6 +280,62 @@ even though the indexing command accepts any folder.
 No production-scale performance claim is made. See `docs/corpus-refresh.md` for
 measured behaviour, timings, caveats, and the scale analysis.
 
+### Phase 15 — Customer corpus configuration and safe document opening
+
+Made the prototype deployable against a customer's own document folder, and
+resolved the duplicate-filename ambiguity Phase 14 documented.
+
+**Corpus root is now configuration, not code.** `DOCUMENT_FINDER_DATA_ROOT`
+selects the folder the application indexes and serves, with
+`DOCUMENT_FINDER_DATABASE` and `DOCUMENT_FINDER_INDEX` available to relocate the
+index artifacts. With nothing set the behaviour is byte-for-byte the previous
+`data/` layout, so existing local workflows are unaffected. Customers no longer
+copy documents into the repository.
+
+**Indexing and serving cannot silently disagree.** The indexed folder is
+recorded in the index (`index_metadata`). If the application is configured for a
+different folder, `/search` and both document routes return HTTP 503 with an
+explanatory message rather than serving the wrong corpus. Indexes written before
+this metadata existed are accepted, so legacy databases keep working.
+
+**Document identity is now end-to-end.** Search results are aggregated per
+document identity instead of per filename, and each result carries an opaque
+64-hex `document_id` plus its corpus-relative `folder`.
+`GET /documents/by-id/{document_id}` resolves the identifier through the index,
+joins the stored relative path to the configured root, verifies containment and
+existence, and only then serves the file. The browser never supplies or receives
+a filesystem path; unknown/malformed identifiers, deleted files, traversal, and
+absolute stored paths are all rejected. The older
+`GET /documents/{filename}` route remains for unambiguous names and still
+refuses rather than guessing.
+
+Two same-named documents in different folders are therefore now two search
+results, distinguishable by folder, each opening its own file. The frontend
+change was minimal: show the folder line, open by identifier.
+
+Retrieval quality, ranking, Qwen embeddings, FAISS, lexical and hybrid
+retrieval, OCR, chunking, the evaluation datasets, and the isolated Phase 13
+experiment are all unchanged. The only retrieval-path edit is the aggregation
+key in `search/vector.py`; because the 36-document corpus contains no duplicate
+filenames, document identity maps one-to-one onto filename there and the ordering
+key is unchanged, so its ranking is provably identical.
+
+Real-corpus validation on a temporary copy (production `data/` verified
+untouched, and still without the new table): the configured root was honoured
+for all three artifacts, the index reported 36 documents / 441 chunks /
+441 embeddings / 441 FAISS vectors consistent, `/health` reported
+`{"corpus": "ok", "documents": 36}`, and **all 36 real documents opened by
+identifier with zero byte mismatches**. Modifying a file inside the configured
+root changed what the API served, proving it reads from configuration rather
+than `data/`. A duplicate-filename scenario built from real documents returned
+both `procedure.docx` documents as distinct results (folders `Engineering` and
+`Quality`) and opened each byte-exactly (11.5 MB vs 6.1 MB).
+
+No production-scale performance claim is made; retrieval quality was not
+re-measured, since `torch`/`transformers` are unavailable in this environment.
+
+See `docs/customer-demo.md` for the demo workflow.
+
 ## Current Next Task
 
 Finish and verify Phase 10.

@@ -63,6 +63,11 @@ CREATE TABLE IF NOT EXISTS ingest_runs (
     warnings_json TEXT NOT NULL,
     error_text TEXT
 );
+CREATE TABLE IF NOT EXISTS index_metadata (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
     source_text, heading_path_json, content='chunks', content_rowid='chunk_id'
 );
@@ -309,3 +314,18 @@ class SQLiteRepository:
                 )
                 removed += 1
         return removed
+
+    def set_metadata(self, key: str, value: str) -> None:
+        """Record index-level metadata, such as which folder was indexed."""
+        with self.connection:
+            self.connection.execute(
+                """INSERT INTO index_metadata(key, value, updated_at) VALUES (?, ?, ?)
+                   ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at""",
+                (key, value, _now()),
+            )
+
+    def get_metadata(self, key: str) -> str | None:
+        row = self.connection.execute(
+            "SELECT value FROM index_metadata WHERE key = ?", (key,)
+        ).fetchone()
+        return row["value"] if row else None

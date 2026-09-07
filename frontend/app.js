@@ -15,8 +15,9 @@ function showValidation(message = "") {
   validation.hidden = !message;
 }
 
-function documentUrl(filename) {
-  return `/documents/${encodeURIComponent(filename)}`;
+function documentUrl(documentId) {
+  // The identifier comes from the search index; the browser never supplies a path.
+  return `/documents/by-id/${encodeURIComponent(documentId)}`;
 }
 
 function renderResults(items) {
@@ -26,6 +27,15 @@ function renderResults(items) {
     card.className = "result";
     const heading = document.createElement("h2");
     heading.textContent = item.filename;
+    card.append(heading);
+    // Two documents can share a filename in different folders; show the
+    // corpus-relative folder so they can be told apart.
+    if (item.folder) {
+      const location = document.createElement("p");
+      location.className = "result-folder";
+      location.textContent = item.folder.split("/").join(" / ");
+      card.append(location);
+    }
     const detail = document.createElement("p");
     detail.innerHTML = `<span class="label">Relevant section:</span> `;
     detail.append(document.createTextNode(item.section));
@@ -34,11 +44,11 @@ function renderResults(items) {
     }
     const open = document.createElement("a");
     open.className = "open-document";
-    open.href = documentUrl(item.filename);
+    open.href = documentUrl(item.document_id);
     open.target = "_blank";
     open.rel = "noopener";
     open.textContent = "Open Document";
-    card.append(heading, detail, open);
+    card.append(detail, open);
     results.append(card);
   }
 }

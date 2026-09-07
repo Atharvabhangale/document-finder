@@ -20,3 +20,9 @@ button:disabled { cursor: wait; opacity: .7; }
 .result p { margin: 7px 0 18px; color: #46576b; }
 .label { color: #152238; font-weight: 650; }
 @media (max-width: 560px) { .app-shell { margin-top: 40px; } .search-row { flex-direction: column; } button { width: 100%; } }
+
+.result-folder {
+  margin: 0.15rem 0 0.35rem;
+  font-size: 0.85rem;
+  color: #5b6472;
+}

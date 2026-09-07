@@ -1,4 +1,9 @@
-"""Public API request and response schemas; source paths are intentionally excluded."""
+"""Public API request and response schemas.
+
+Absolute filesystem paths are intentionally never exposed. A result carries an
+opaque `document_id` for opening the exact document, plus the corpus-relative
+`folder` so a user can tell apart two documents that share a filename.
+"""
 
 from __future__ import annotations
 
@@ -14,7 +19,9 @@ class SearchRequest(BaseModel):
 
 
 class SearchResult(BaseModel):
+    document_id: str
     filename: str
+    folder: str = ""
     score: float
     section: str
     page: int | None = None
@@ -27,3 +34,5 @@ class SearchResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
+    corpus: str = "ok"
+    documents: int = 0

@@ -97,6 +97,12 @@ model was needed at all.
 
 ### Duplicate filenames are ambiguous at the edges
 
+> **Resolved in Phase 15.** Search results are now aggregated per document
+> identity rather than per filename, results carry an opaque `document_id`
+> plus their corpus-relative folder, and `GET /documents/by-id/{document_id}`
+> opens the exact document. See `docs/customer-demo.md`. The description
+> below records the Phase 14 state.
+
 Internal identity is safe — `document_id = sha256(source_path)`, and
 `source_path` is unique — so two same-named files in different folders remain
 two documents and neither is lost or overwritten. But the *filename* is the
@@ -127,6 +133,11 @@ those documents so the next run re-parses them. Best practice remains: install
 the extras before the first ingest.
 
 ### The application still assumes a fixed corpus path
+
+> **Resolved in Phase 15.** The corpus root is read from
+> `DOCUMENT_FINDER_DATA_ROOT` (default `data/`), and the API refuses to serve
+> an index built for a different folder. See `docs/customer-demo.md`. The
+> description below records the Phase 14 state.
 
 `api/routes.py` hardcodes `DEFAULT_DOCUMENT_ROOT = Path("data")` and
 `search/lexical.py` hardcodes `DEFAULT_DATABASE_PATH = Path("data/document_finder.sqlite3")`.

@@ -255,8 +255,8 @@ def test_duplicate_filenames_are_refused_rather_than_opened_ambiguously(
     database = tmp_path / "index.sqlite3"
     refresh_corpus(source, database, tmp_path / "vectors.faiss", StubEmbeddingModel())
 
-    monkeypatch.setattr(routes, "DEFAULT_DATABASE_PATH", database)
-    monkeypatch.setattr(routes, "DEFAULT_DOCUMENT_ROOT", source)
+    monkeypatch.setenv("DOCUMENT_FINDER_DATA_ROOT", str(source))
+    monkeypatch.setenv("DOCUMENT_FINDER_DATABASE", str(database))
 
     assert routes.resolve_document_path("Same Name.docx") is None
     assert routes.resolve_document_path("Unique.docx") == (source / "Unique.docx").resolve()

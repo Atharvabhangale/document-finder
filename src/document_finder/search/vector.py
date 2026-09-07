@@ -146,7 +146,7 @@ def search_vector(
     connection.row_factory = sqlite3.Row
     try:
         rows = connection.execute(
-            f"""SELECT c.chunk_id, c.document_id, c.page, s.heading, s.section_path_json, d.filename
+            f"""SELECT c.chunk_id, c.document_id, c.page, s.heading, s.section_path_json, d.filename, d.source_path
                 FROM chunks c JOIN sections s ON s.section_id=c.section_id
                 JOIN documents d ON d.document_id=c.document_id
                 WHERE c.chunk_id IN ({','.join('?' for _ in candidates)})""",
@@ -161,12 +161,17 @@ def search_vector(
         if row is None:
             continue
         path = json.loads(row['section_path_json'])
-        result = {"document_id": row['document_id'], "filename": row['filename'], "score": (similarity + 1) / 2,
+        result = {"document_id": row['document_id'], "filename": row['filename'],
+                  "source_path": row['source_path'], "score": (similarity + 1) / 2,
                   "section": path[-1] if path else row['heading'], "page": row['page'], "chunk_id": str(chunk_id)}
-        prior = best.get(result['filename'])
+        # Aggregated per document, not per filename: two documents that happen to
+        # share a filename in different folders are different documents and must
+        # not collapse into one another. Where filenames are unique this produces
+        # exactly the same grouping, and the ordering key is unchanged.
+        prior = best.get(result['document_id'])
         if prior is None or result['score'] > prior['score']:
-            best[result['filename']] = result
-    return sorted(best.values(), key=lambda result: (-result['score'], result['filename']))[:limit]
+            best[result['document_id']] = result
+    return sorted(best.values(), key=lambda result: (-result['score'], result['filename'], result['document_id']))[:limit]
 
 
 def main() -> int:

@@ -28,15 +28,20 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+from document_finder import config
 from document_finder.embeddings.model import EmbeddingModel, configuration_key, get_default_model
 from document_finder.ingestion.discover import discover_documents
 from document_finder.ingestion.pipeline import ingest_directory
-from document_finder.search.vector import DEFAULT_INDEX_PATH, build_vector_index, _manifest_path
+from document_finder.search.vector import build_vector_index, _manifest_path
 
 # Refuse to prune more than this fraction of the index in one run unless the
 # caller explicitly opts in. A corpus folder that is mostly missing is far more
 # likely to be a wrong path or an unmounted share than a real bulk deletion.
 MAX_AUTOMATIC_PRUNE_FRACTION = 0.5
+
+# Stored in the index so the serving application can verify it is looking at the
+# corpus this index was built from.
+DOCUMENT_ROOT_KEY = "document_root"
 
 
 @dataclass
@@ -170,8 +175,8 @@ def refresh_corpus(
     from document_finder.storage.repository import SQLiteRepository
 
     root = Path(source_root).resolve()
-    database = Path(database_path) if database_path else root / "document_finder.sqlite3"
-    index = Path(index_path) if index_path else Path(DEFAULT_INDEX_PATH)
+    database = Path(database_path) if database_path else root / config.DATABASE_FILENAME
+    index = Path(index_path) if index_path else root / config.VECTOR_INDEX_RELATIVE
     summary = RefreshSummary(str(root), str(database), str(index))
 
     # A failed scan must never be read as "the corpus is empty".
@@ -189,6 +194,7 @@ def refresh_corpus(
                     f"Re-processing {len(failed_ocr)} document(s) whose OCR previously failed."
                 )
 
+        repository.set_metadata(DOCUMENT_ROOT_KEY, str(root))
         prunable = _prunable(root, discovered_paths, indexed) if prune else []
         if prune and prunable:
             if not discovered_paths and not allow_full_prune:
@@ -305,9 +311,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Load or refresh a document corpus from a folder, then update the search index.",
     )
-    parser.add_argument("source_directory", type=Path, help="Folder containing the customer's documents")
+    parser.add_argument("source_directory", type=Path, nargs="?",
+                        help="Folder containing the customer's documents "
+                             "(default: the configured corpus root)")
     parser.add_argument("--database", type=Path, help="SQLite index (default: <folder>/document_finder.sqlite3)")
-    parser.add_argument("--index", type=Path, help=f"FAISS index (default: {DEFAULT_INDEX_PATH})")
+    parser.add_argument("--index", type=Path, help="FAISS index (default: <folder>/vector/...)")
     parser.add_argument("--no-prune", action="store_true", help="Keep documents that are no longer in the folder")
     parser.add_argument("--allow-full-prune", action="store_true",
                         help="Permit removing more than half the index in one run")
@@ -316,10 +324,21 @@ def main() -> int:
     parser.add_argument("--no-build", action="store_true", help="Ingest only; do not embed or build FAISS")
     parser.add_argument("--json", action="store_true", help="Print the machine-readable summary")
     args = parser.parse_args()
+    source_directory = args.source_directory or config.data_root()
+
+    # Indexing one folder while the application serves another is the failure this
+    # phase exists to prevent, so say so at index time as well as at serve time.
+    if Path(source_directory).resolve() != config.resolved_data_root():
+        print(
+            f"NOTE: indexing {Path(source_directory).resolve()}, but the application is "
+            f"configured to serve {config.resolved_data_root()}.\n"
+            f"      Set {config.DATA_ROOT_VARIABLE} to the folder you are indexing before "
+            "starting the API, or it will refuse to serve this index.\n"
+        )
 
     try:
         summary = refresh_corpus(
-            args.source_directory,
+            source_directory,
             database_path=args.database,
             index_path=args.index,
             prune=not args.no_prune,

@@ -59,7 +59,12 @@ def test_vector_embedding_index_search_aggregation_and_persistence(tmp_path: Pat
     assert results[0]["filename"] == "Procurement.docx"
     assert results[0]["section"] == "Procurement Kit"
     assert results[0]["page"] is None and results[0]["chunk_id"]
-    assert [item["filename"] for item in duplicate_results].count("Same.docx") == 1
+    # Two different documents that share a filename must stay distinct results,
+    # each carrying its own document identity and relative source path.
+    same_named = [item for item in duplicate_results if item["filename"] == "Same.docx"]
+    assert len(same_named) == 2
+    assert len({item["document_id"] for item in same_named}) == 2
+    assert sorted(item["source_path"] for item in same_named) == ["one/Same.docx", "two/Same.docx"]
     connection = sqlite3.connect(database)
     try:
         assert connection.execute("SELECT COUNT(*) FROM chunk_embeddings").fetchone()[0] == 3
