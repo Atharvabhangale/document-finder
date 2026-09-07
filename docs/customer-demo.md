@@ -148,6 +148,18 @@ uvicorn document_finder.api.app:app       # serve
 
 Then: search a process in natural language → pick a result → **Open Document**.
 
+## Search assistance for vague queries
+
+Short, ambiguous queries can be met with **one** lightweight question before
+searching — for example `gate` offers MS0–MS4, and `chatbot` offers the three
+deployment versions. Clear queries such as `how do I create an ECR?` go straight
+to results, and every question offers **Search all documents**, so the step can
+never block anyone.
+
+Turn it off with `QUERY_UNDERSTANDING_ENABLED=false`. Details, including the
+decision rule and its measured behaviour on this corpus, are in
+`docs/query-understanding-integration.md`.
+
 ## Relationship to the future Windchill work
 
 ```

@@ -23,10 +23,20 @@ from pathlib import Path
 DATA_ROOT_VARIABLE = "DOCUMENT_FINDER_DATA_ROOT"
 DATABASE_VARIABLE = "DOCUMENT_FINDER_DATABASE"
 INDEX_VARIABLE = "DOCUMENT_FINDER_INDEX"
+QUERY_UNDERSTANDING_VARIABLE = "QUERY_UNDERSTANDING_ENABLED"
+MIN_REDUCTION_VARIABLE = "QUERY_UNDERSTANDING_MIN_REDUCTION"
 
 DEFAULT_DATA_ROOT = Path("data")
 DATABASE_FILENAME = "document_finder.sqlite3"
 VECTOR_INDEX_RELATIVE = Path("vector") / "qwen3_embedding_0_6b.faiss"
+
+# A clarification question must at least halve the candidate set to be worth
+# asking. Chosen as a round, explainable rule rather than fitted to any
+# labelled dataset: a question that removes less than half the work costs the
+# user a round trip for little gain. Override with
+# QUERY_UNDERSTANDING_MIN_REDUCTION (0.0 asks whenever any narrowing exists,
+# 1.0 effectively never asks).
+DEFAULT_MIN_CLARIFICATION_REDUCTION = 0.5
 
 
 def data_root() -> Path:
@@ -59,3 +69,30 @@ def describe() -> dict[str, str]:
         "database": str(database_path()),
         "index": str(index_path()),
     }
+
+
+def _flag(value: str) -> bool:
+    return value.strip().casefold() in {"1", "true", "yes", "on"}
+
+
+def query_understanding_enabled() -> bool:
+    """Whether the clarification layer runs in front of search.
+
+    Defaults to enabled: this is the customer-facing flow Phase 16 introduces,
+    the layer only speaks up for ambiguous queries, and it falls back to normal
+    search on any failure. Setting QUERY_UNDERSTANDING_ENABLED=false restores
+    the exact pre-Phase-16 behaviour.
+    """
+    configured = os.environ.get(QUERY_UNDERSTANDING_VARIABLE)
+    return True if configured is None else _flag(configured)
+
+
+def min_clarification_reduction() -> float:
+    """Smallest worst-case candidate reduction that justifies asking a question."""
+    configured = os.environ.get(MIN_REDUCTION_VARIABLE, "").strip()
+    if not configured:
+        return DEFAULT_MIN_CLARIFICATION_REDUCTION
+    try:
+        return min(max(float(configured), 0.0), 1.0)
+    except ValueError:
+        return DEFAULT_MIN_CLARIFICATION_REDUCTION

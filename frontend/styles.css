@@ -26,3 +26,51 @@ button:disabled { cursor: wait; opacity: .7; }
   font-size: 0.85rem;
   color: #5b6472;
 }
+
+.clarification {
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #d8dee8;
+  border-radius: 10px;
+  background: #f7f9fc;
+}
+
+.clarification-question {
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+}
+
+.clarification-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.clarification-option {
+  padding: 0.45rem 0.85rem;
+  border: 1px solid #c3cdda;
+  border-radius: 999px;
+  background: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.clarification-option:hover {
+  border-color: #8fa3bd;
+  background: #eef3fa;
+}
+
+.clarification-option.secondary {
+  border-style: dashed;
+}
+
+.clarification-change {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: #5b6472;
+  text-decoration: underline;
+  cursor: pointer;
+}

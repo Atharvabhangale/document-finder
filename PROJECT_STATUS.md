@@ -336,6 +336,73 @@ re-measured, since `torch`/`transformers` are unavailable in this environment.
 
 See `docs/customer-demo.md` for the demo workflow.
 
+### Phase 16 — Query understanding integrated as an optional decision layer
+
+The Phase 13 experiment now sits in front of search in the product, deciding per
+query whether one clarification question is worth asking.
+
+    query -> analyze -> worth asking? --no--> search (unchanged)
+                              |
+                             yes -> one question -> answer -> search scoped to it
+                                         (or "Search all documents")
+
+**Retrieval is untouched.** No change to Qwen embeddings, embedding generation,
+persisted embeddings, the FAISS index, similarity, lexical search, hybrid
+search, ingestion, OCR or chunking. `search/`, `ingestion/`, `storage/`,
+`embeddings/`, `sources/` and every evaluation dataset are byte-unchanged this
+phase. `/search` without a `clarification` field takes exactly the previous code
+path.
+
+**The Phase 13 analyzer's decisions are provably unchanged.** Two additive
+changes were made to it — documents carry their index identity, and a
+clarification records which documents each option selects — so a caller can act
+on the user's answer without duplicating facet logic. The frozen 60-query
+evaluation output is byte-identical before and after (verified by diff), and its
+labels and dataset were not touched.
+
+**The usefulness rule is the substance of this phase.** The analyzer already
+required each option to select a strict subset; the integration layer adds one
+test, reusing the analyzer's own reported numbers:
+
+    reduction = 1 - largest_option_candidates / candidates_before
+
+A question is asked only when the *worst-case* reduction meets
+`QUERY_UNDERSTANDING_MIN_REDUCTION` (default 0.5 — "a question must at least
+halve the work"). This is what makes `SOP` (16 candidates to 14, which Phase 13
+itself called useless) decline to ask, while `gate` (7 to 1) asks. The default
+is a round, explainable rule, not fitted to the frozen labels.
+
+Configuration: `QUERY_UNDERSTANDING_ENABLED` (default true; `false` restores
+exact pre-Phase-16 behaviour) and `QUERY_UNDERSTANDING_MIN_REDUCTION`.
+
+New `POST /query-understanding` returns only `{query, needs_clarification,
+question, options}` — no intent, confidence, ambiguity or candidate counts reach
+the client. `POST /search` gains one optional `clarification` field. Answers
+scope results to the documents that answer selects (a restriction over document
+identity, documented and justified: retrieval, scoring and ordering are
+unchanged, retrieval goes deeper first, and an empty scope falls back to the
+unscoped results).
+
+Every failure path falls back to plain search: layer disabled, missing index,
+analyzer exception, unreachable endpoint, or unknown answer.
+
+Measured on the real 36-document corpus (recorded, not tuned): 4 of 16 probe
+queries clarify — `gate` 86%, `chatbot` 67%, `user guide` 60%,
+`change management` 50% reduction — and the rest go direct, including
+`SOP` 12%, `NPD` 12%, `BOM` 17%, `work request` 40%. End-to-end on a corpus
+copy, `gate` narrowed 20 results to exactly 1 per option and every narrowed
+document opened byte-exactly.
+
+Known gaps: `ECR` does not clarify (only two documents name it, below the
+analyzer's 3-candidate floor); `BOM`/`SOP` have one dominant branch so their
+worst case fails the bar even though the other branch narrows sharply; the
+filename-token facet caps at five options, so `gate` omits MS5/MS6 behind
+"Search all documents". Retrieval quality was **not** re-measured
+(`torch`/`transformers` unavailable), the end-to-end narrowing check used a stub
+embedder, and no ranking improvement is claimed.
+
+See `docs/query-understanding-integration.md`.
+
 ## Current Next Task
 
 Finish and verify Phase 10.

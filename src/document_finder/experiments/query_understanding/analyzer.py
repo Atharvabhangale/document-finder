@@ -99,6 +99,7 @@ class Candidate:
     categories: tuple[str, ...]
     domains: tuple[str, ...]
     types: tuple[str, ...]
+    document_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -108,6 +109,10 @@ class Clarification:
     facet: str
     option_candidate_counts: dict[str, int] = field(default_factory=dict)
     candidates_before: int = 0
+    # Document identities each option selects, so a caller can act on the
+    # user's choice without re-deriving the facet. Reporting only; no decision
+    # in this module reads it.
+    option_documents: dict[str, tuple[str, ...]] = field(default_factory=dict)
 
     @property
     def reduces_search_space(self) -> bool:
@@ -196,7 +201,8 @@ def _candidates(profile: CorpusProfile, terms: list[str]) -> list[Candidate]:
         return []
     top = max(score for _, score, _ in scored)
     kept = [
-        Candidate(document.filename, score, coverage, document.categories, document.domains, document.types)
+        Candidate(document.filename, score, coverage, document.categories, document.domains,
+                  document.types, document.document_id)
         for document, score, coverage in scored
         if score >= CANDIDATE_SCORE_FLOOR * top
     ]
@@ -210,18 +216,29 @@ def _ordered_unique(values: list[str]) -> tuple[str, ...]:
     return tuple(seen)
 
 
-def _finalize(question: str, facet: str, counts: dict[str, int], before: int) -> Clarification | None:
+def _finalize(
+    question: str, facet: str, members: dict[str, list[Candidate]], before: int
+) -> Clarification | None:
     """Keep only options that genuinely narrow the candidate set.
 
     An option selecting every candidate (or none) teaches the user nothing, so it
     is dropped rather than allowed to invalidate an otherwise useful question. At
     least two narrowing options must survive.
     """
-    narrowing = {option: count for option, count in counts.items() if 0 < count < before}
+    narrowing = {
+        option: selected for option, selected in members.items() if 0 < len(selected) < before
+    }
     if len(narrowing) < 2:
         return None
     options = (*sorted(narrowing), ESCAPE_OPTION)
-    return Clarification(question, options, facet, {**narrowing, ESCAPE_OPTION: before}, before)
+    counts = {option: len(selected) for option, selected in narrowing.items()}
+    documents = {
+        option: tuple(candidate.document_id for candidate in selected if candidate.document_id)
+        for option, selected in narrowing.items()
+    }
+    return Clarification(
+        question, options, facet, {**counts, ESCAPE_OPTION: before}, before, documents
+    )
 
 
 def _build_clarification(
@@ -234,33 +251,33 @@ def _build_clarification(
         return None
 
     if len(domains) > 1:
-        counts = {
-            DOMAIN_LABELS[domain]: sum(1 for candidate in candidates if domain in candidate.domains)
+        by_domain = {
+            DOMAIN_LABELS[domain]: [c for c in candidates if domain in c.domains]
             for domain in domains if domain in DOMAIN_LABELS
         }
-        clarification = _finalize("Which area are you looking in?", "domain", counts, before)
+        clarification = _finalize("Which area are you looking in?", "domain", by_domain, before)
         if clarification is not None:
             return clarification
 
     if len(categories) > 1:
-        counts = {
-            category: sum(1 for candidate in candidates if category in candidate.categories)
+        by_category = {
+            category: [c for c in candidates if category in c.categories]
             for category in categories
         }
-        clarification = _finalize("What are you looking for?", "category", counts, before)
+        clarification = _finalize("What are you looking for?", "category", by_category, before)
         if clarification is not None:
             return clarification
 
-    type_counts: dict[str, int] = {}
+    by_type: dict[str, list[Candidate]] = {}
     for candidate in candidates:
         for document_type in candidate.types:
-            type_counts[document_type] = type_counts.get(document_type, 0) + 1
-    clarification = _finalize("What kind of document do you need?", "document_type", type_counts, before)
+            by_type.setdefault(document_type, []).append(candidate)
+    clarification = _finalize("What kind of document do you need?", "document_type", by_type, before)
     if clarification is not None:
         return clarification
 
     query_terms = set(terms)
-    token_counts: dict[str, int] = {}
+    by_token: dict[str, list[Candidate]] = {}
     preceding: dict[str, str] = {}
     for candidate in candidates:
         tokens = tokenize(candidate.filename)
@@ -270,21 +287,21 @@ def _build_clarification(
                 continue
             if position > 0:
                 preceding.setdefault(token, tokens[position - 1])
-            token_counts[token] = token_counts.get(token, 0) + 1
+            by_token.setdefault(token, []).append(candidate)
     discriminating = sorted(
-        ((token, count) for token, count in token_counts.items() if 0 < count < before),
-        key=lambda item: (-item[1], item[0]),
+        ((token, selected) for token, selected in by_token.items() if 0 < len(selected) < before),
+        key=lambda item: (-len(item[1]), item[0]),
     )[:5]
-    counts: dict[str, int] = {}
-    for token, count in discriminating:
+    labelled: dict[str, list[Candidate]] = {}
+    for token, selected in discriminating:
         # A bare number ("01") is meaningless as an option label; qualify it with
         # the word in front of it in the filename ("Version 01").
         if token.isdigit() and preceding.get(token):
             label = f"{preceding[token].title()} {token}"
         else:
             label = token.upper() if len(token) <= 3 else token.title()
-        counts[label] = count
-    return _finalize("Which one do you need?", "distinguishing_term", counts, before)
+        labelled[label] = selected
+    return _finalize("Which one do you need?", "distinguishing_term", labelled, before)
 
 
 def _confidence(

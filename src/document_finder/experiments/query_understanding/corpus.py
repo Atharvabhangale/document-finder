@@ -40,6 +40,9 @@ class DocumentProfile:
     filename: str
     headings: tuple[str, ...] = ()
     text: str = ""
+    # Stable identity from the index. Optional so synthetic profiles stay terse;
+    # populated from SQLite so a caller can resolve a document exactly.
+    document_id: str = ""
 
     @property
     def filename_tokens(self) -> frozenset[str]:
@@ -96,6 +99,10 @@ class CategorizedDocument:
     @property
     def filename(self) -> str:
         return self.profile.filename
+
+    @property
+    def document_id(self) -> str:
+        return self.profile.document_id
 
     @property
     def primary_domain(self) -> str | None:
@@ -165,7 +172,9 @@ class CorpusProfile:
                         (document["document_id"],),
                     )
                 )
-                profiles.append(DocumentProfile(document["filename"], tuple(headings), text))
+                profiles.append(DocumentProfile(
+                    document["filename"], tuple(headings), text, document["document_id"]
+                ))
         finally:
             connection.close()
         return cls.from_profiles(profiles)

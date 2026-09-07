@@ -16,7 +16,16 @@ from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import FileResponse
 
 from document_finder import config
-from document_finder.api.schemas import HealthResponse, SearchRequest, SearchResponse, SearchResult
+from document_finder import understanding
+from document_finder.api.schemas import (
+    ClarificationOptionResponse,
+    HealthResponse,
+    QueryUnderstandingRequest,
+    QueryUnderstandingResponse,
+    SearchRequest,
+    SearchResponse,
+    SearchResult,
+)
 from document_finder.search.vector import search_vector
 
 
@@ -24,6 +33,12 @@ router = APIRouter()
 
 DOCUMENT_ROOT_KEY = "document_root"
 _DOCUMENT_ID_PATTERN = re.compile(r"\A[0-9a-f]{64}\Z")
+
+# When a clarification is applied, retrieve deeper before narrowing so the
+# chosen subset is still filled from the same ranking rather than from
+# whatever happened to fit in the top few rows.
+CLARIFIED_CANDIDATE_MULTIPLIER = 4
+MAX_CLARIFIED_CANDIDATES = 40
 
 
 def _connect(database_path: Path) -> sqlite3.Connection | None:
@@ -162,10 +177,25 @@ def search(request: SearchRequest) -> SearchResponse:
     if not query:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="query must not be empty")
     _require_usable_corpus()
+
+    # A clarification answer narrows which documents may be shown. Retrieval
+    # itself is unchanged: the same query, the same embeddings, the same index
+    # and the same ordering — only the presented set is scoped.
+    allowed: tuple[str, ...] | None = None
+    if request.clarification:
+        try:
+            allowed = understanding.documents_for_choice(query, request.clarification)
+        except Exception:
+            allowed = None
+    fetch_limit = (
+        min(request.limit * CLARIFIED_CANDIDATE_MULTIPLIER, MAX_CLARIFIED_CANDIDATES)
+        if allowed else request.limit
+    )
+
     try:
         candidates = search_vector(
             query,
-            limit=request.limit,
+            limit=fetch_limit,
             database_path=config.database_path(),
             index_path=config.index_path(),
         )
@@ -184,6 +214,10 @@ def search(request: SearchRequest) -> SearchResponse:
         if existing is None or candidate["score"] > existing["score"]:
             best[key] = candidate
     ordered = sorted(best.values(), key=lambda item: (-item["score"], item["filename"], item.get("document_id") or ""))
+    if allowed:
+        scoped = [item for item in ordered if item.get("document_id") in set(allowed)]
+        # Never let a narrowing choice leave the user with nothing to look at.
+        ordered = scoped or ordered
     results = [
         SearchResult(
             document_id=item.get("document_id") or "",
@@ -196,6 +230,30 @@ def search(request: SearchRequest) -> SearchResponse:
         for item in ordered[:request.limit]
     ]
     return SearchResponse(query=query, results=results)
+
+
+@router.post("/query-understanding", response_model=QueryUnderstandingResponse)
+def query_understanding(request: QueryUnderstandingRequest) -> QueryUnderstandingResponse:
+    """Decide whether one clarification question is worth asking before searching.
+
+    Always answers. If the layer is disabled or fails, the answer is simply
+    "no clarification needed", and the client proceeds to search.
+    """
+    query = request.query.strip()
+    if not query:
+        return QueryUnderstandingResponse(query=query, needs_clarification=False)
+    prepared = understanding.prepare(query)
+    if not prepared.needs_clarification:
+        return QueryUnderstandingResponse(query=query, needs_clarification=False)
+    return QueryUnderstandingResponse(
+        query=query,
+        needs_clarification=True,
+        question=prepared.question,
+        options=[
+            ClarificationOptionResponse(label=option.label, value=option.value)
+            for option in prepared.options
+        ],
+    )
 
 
 @router.get("/documents/by-id/{document_id}")
