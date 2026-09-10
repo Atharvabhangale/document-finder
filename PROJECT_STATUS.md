@@ -403,6 +403,85 @@ embedder, and no ranking improvement is claimed.
 
 See `docs/query-understanding-integration.md`.
 
+### Phase 17 — Clarification facets ranked, not taken first-come
+
+The decision layer took the first viable facet on the ladder, which is not always
+the most useful one. Facets are now ranked by **option coverage first, then
+worst-case split, then ladder order**; the filename-token facet remains last
+resort. No query is special-cased — both signals are computed from the corpus.
+
+- `bom` matches six documents that domain splits 5/1 (a 17% worst case the
+  usefulness rule rightly rejects) while document type splits them 3/3. `bom`
+  now clarifies.
+- Ranking on the split alone would have picked `sop`'s document-type facet,
+  whose 81% reduction came entirely from its dominant bucket being dropped for
+  covering all sixteen candidates; its options reached only 5. Coverage ranking
+  chooses the full-coverage category facet instead.
+
+`gate`, `chatbot` and `change management` are unchanged; `work request`,
+`procurement`, `how do I create an ECR?` and `engine 37 hp 2900 rpm` stay
+direct. Every Phase 13 labelled metric is identical and `needs_clarification` is
+unchanged for all 60 queries. `analyzer.py` was the only source file touched.
+
+### Phase 18 — EXPERIMENT ONLY: "partial-but-meaningful" clarification
+
+Tested whether a clarification should expose **only the genuinely useful
+branches** of a facet instead of requiring the whole facet to partition the
+candidate set — the natural next step Phase 16 had named for `work request`,
+`NPD` and `ECR`.
+
+**Outcome: DO NOT IMPLEMENT. Production behaviour is unchanged**, and no
+production source file carries a diff this phase. What was added is an isolated
+diagnostic and prototype
+(`experiments/query_understanding/partial_branch.py`), a reproducible
+comparison (`evaluation/query_understanding/phase18_partial_branch.py`) and 46
+tests pinning what was found.
+
+The deciding finding is structural, not corpus-specific: **the dominant branch
+is the on-topic branch.** Candidates are selected because they match the query,
+so the facet branch grouping the documents the query is about is normally the
+largest. Dropping "the branch that narrows too little" therefore drops what the
+user asked for — `work request` would be answered with the two documents that
+are *not* work requests, `BOM` with the three that are *not* about BOM.
+
+Measured over 65 queries (8 probes, the Phase 16/17 regression probes, the
+frozen 60-query dataset), each strategy against the real production decision:
+
+| Strategy | Differs on | Required-preserved probes broken |
+|---|---:|---|
+| drop weak branches, no coverage guard | 7 | `work request`, `NPD`, `BOM`, `SOP`, `deployment` |
+| drop weak branches, coverage as a hard floor | 6 | `work request`, `NPD`, `BOM`, `deployment` |
+| drop weak branches, coverage as Phase 17's rank bucket | 6 | `work request`, `NPD`, `BOM`, `deployment` |
+| never answer with filename tokens | 4 | `BOM`, `gate`, `chatbot` |
+| keep every branch, relax the question rule | 2 | none |
+
+`ECR` is confirmed unreachable at any threshold: two candidates, one narrowing
+branch, and the only facet that could ask answers with the fragments PR, PRR,
+ACN, Change and Management — which collapse to two distinct selections, one per
+document. `NPD`'s only sharply-narrowing option set is `Creation, MS0, MS1, MS2,
+MS3`, a fragment beside an incomplete family.
+
+The one new question worth asking that the experiment found anywhere —
+`work request` → `Work Request` / `NPD / Project` / `Part / WTPart / CAD`,
+complete coverage, nothing synthesised — comes from *keeping* the dominant
+branch, which is the opposite of the proposal, and needs **no new code**:
+`QUERY_UNDERSTANDING_MIN_REDUCTION=0.4` produces it today and changes no other
+decision on this corpus. The default stays 0.5 rather than being fitted to one
+query.
+
+Also recorded, not fixed: `analyzer._finalize` can build clarifications with
+two options selecting the identical document set (`NPD`, `deployment`, and one
+natural-language query). All three are declined by the reduction bar before
+being asked, so no user can see a duplicate option; a characterisation test
+fails if that stops being true.
+
+Full suite: **165 passed** (119 before, 46 added). The Phase 13 evaluation
+output is byte-identical to the pre-phase baseline, and its frozen dataset and
+labels were not touched. Vector and hybrid retrieval evaluations could not be
+run — `torch`/`transformers` are unavailable — so no retrieval metric is
+claimed; no retrieval code was touched. See
+`docs/phase18-partial-branch-experiment.md`.
+
 ## Current Next Task
 
 Finish and verify Phase 10.

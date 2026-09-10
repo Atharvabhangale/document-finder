@@ -186,10 +186,14 @@ def test_document_categories_retain_genuine_overlap(profile: CorpusProfile) -> N
 
 
 def test_experiment_stays_isolated_from_production_retrieval() -> None:
-    """Phase 13 must not be wired into ingestion, retrieval, or the API."""
-    from document_finder.experiments.query_understanding import analyzer, corpus
+    """The experiment modules must not be wired into ingestion, retrieval, or the API.
 
-    for module in (analyzer, corpus):
+    Covers the Phase 13 analyzer and profile plus the Phase 18 partial-branch
+    prototype: all three read only the corpus profile.
+    """
+    from document_finder.experiments.query_understanding import analyzer, corpus, partial_branch
+
+    for module in (analyzer, corpus, partial_branch):
         source = Path(module.__file__).read_text(encoding="utf-8")
         assert "document_finder.search" not in source
         assert "faiss" not in source

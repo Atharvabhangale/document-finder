@@ -66,10 +66,12 @@ after this integration.
 
 ## How the options are produced
 
-Entirely by the analyzer, from the corpus — nothing is hard-coded. It tries
-facets in order of discriminating power: domain, then category, then document
-type, then a distinguishing filename token. Whichever first yields at least two
-narrowing options wins, so the question the user sees differs by query:
+Entirely by the analyzer, from the corpus — nothing is hard-coded. It builds
+every facet it can — domain, category, document type, and a distinguishing
+filename token — keeping the options that select a strict, non-empty subset,
+then ranks them as described above: semantic facets first, by coverage, then by
+worst-case split, with the ladder order breaking ties. The filename-token facet
+is last resort. So the question the user sees differs by query:
 
 | Query | Question | Options |
 |---|---|---|
@@ -175,12 +177,20 @@ corpus root.
 1. **`ECR` does not clarify**, though it is the phase's motivating example. Only
    two documents name ECR in a filename or heading, which is below the
    analyzer's 3-candidate floor, so no facet is offered at all. Not a threshold
-   problem, and not tuned around.
+   problem, and not tuned around — Phase 18 confirmed there is no second choice
+   to offer at any threshold.
 2. **`work request` and `NPD` do not clarify.** Every facet available to them has
    one dominant branch (3 of 5, 7 of 8), so the worst case falls below the bar
-   even though the *other* branches narrow sharply. A per-option decision — offer
-   only the branches that genuinely narrow — would handle these, and is the
-   natural next step.
+   even though the *other* branches narrow sharply. Phase 18 tested the obvious
+   remedy — offer only the branches that genuinely narrow — and **rejected it**:
+   the dominant branch is the *on-topic* branch, so dropping it answers
+   `work request` with the two documents that are not work requests, and `NPD`
+   with a filename fragment beside an incomplete MS0–MS3 family. See
+   [phase18-partial-branch-experiment.md](phase18-partial-branch-experiment.md).
+   `work request` does have a complete, meaningful question — one that *keeps*
+   the dominant branch — reachable today with
+   `QUERY_UNDERSTANDING_MIN_REDUCTION=0.4`, which changes no other decision on
+   this corpus. The shipped default stays 0.5 rather than being fitted to it.
 3. **At most five options** are offered for a filename-token facet, so `gate`
    shows MS0–MS4 and omits MS5/MS6; those remain reachable only via
    "Search all documents".
